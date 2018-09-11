@@ -14,27 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ia.controllers
+package uk.gov.hmrc.ia.support
 
-import play.api.http.Status
 import play.api.test.FakeRequest
-import play.api.http.Status
-import play.api.test.FakeRequest
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.play.test.WithFakeApplication
-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-
-class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication{
-
-  val fakeRequest = FakeRequest("GET", "/")
-
-  "GET /" should {
-    "return 200" in {
-      val controller = new MicroserviceHelloWorld()
-      val result = controller.hello()(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
-  }
-
+trait RequestSpec extends Spec {
+  val fakeRequest = FakeRequest("POST", "/")
 }
