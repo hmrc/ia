@@ -1,4 +1,5 @@
 # microservice specific routes
 
+POST        /drop                uk.gov.hmrc.ia.controllers.IaUtrs.drop()
 POST        /upload              uk.gov.hmrc.ia.controllers.IaUtrs.upload
 GET         /:utr                uk.gov.hmrc.ia.controllers.IaUtrs.find(utr)
