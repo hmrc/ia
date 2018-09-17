@@ -28,17 +28,21 @@ import scala.concurrent.Future
 
 class IaUtrs @Inject()(service: GreenUtrService) extends BaseController{
 
+
+  def drop() = Action.async{ implicit request =>
+    service.drop().map(_ => Ok(""))
+  }
   def upload(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[List[GreenUtr]] match {
       case JsSuccess(utrs, _) =>
         //todo if what they upload ok or do they want the delta ?
-        service.bulkInsert(utrs).map(_ => Ok(s"${utrs.length}"))
+        service.bulkInsert(utrs).map(noOfInserts => Ok(s"$noOfInserts"))
       case jsE: JsError => Future.successful(BadRequest(jsE.toString))
     }
   }
   def find(utr:String) = Action.async{ implicit request =>
     service.isGreenUtr(utr).map{
     case true => Ok("")
-    case false => NotFound("")}
+    case false => NoContent}
   }
 }

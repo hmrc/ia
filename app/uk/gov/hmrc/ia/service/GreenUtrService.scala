@@ -23,9 +23,13 @@ import uk.gov.hmrc.ia.repository.ValidUtrRepo
 import scala.concurrent.{ExecutionContext, Future}
 class GreenUtrService @Inject()(repo:ValidUtrRepo) {
 
-
+  def drop()(implicit ec:ExecutionContext):Future[Unit] = {
+    repo.removeAll().map(_ => ())
+  }
   def bulkInsert(greenListedUtr:List[GreenUtr])(implicit ec:ExecutionContext) = {
-    repo.bulkInsert(greenListedUtr).map(_ => ())
+    repo.bulkInsert(greenListedUtr).map{
+      wr => wr.totalN
+    }
   }
   def isGreenUtr(utr:String)(implicit ec:ExecutionContext):Future[Boolean] = {
     //todo should it even be possable to have more then one of the sma ut perhaps can I turn it into an id?

@@ -6,17 +6,20 @@ import uk.gov.hmrc.support.ItSpec
 class IaTests extends ItSpec {
   val iaBaseUrl = "http://localhost:8051"
   val uploadUrl: String = iaBaseUrl + "/ia/upload"
+  val dropUrl: String = iaBaseUrl + "/ia/drop"
   val findUrlBase: String = iaBaseUrl + "/ia/"
 
   val utrListJson = Json.arr(
     Json.obj("utr" -> "1234567890"),
-    Json.obj("utr" -> "1234567890")
+    Json.obj("utr" -> "1234567891")
   )
 
   def uploadUtrs(request: JsValue) = {
     httpClient.POST(uploadUrl, request).futureValue
   }
-
+  def drop() = {
+    httpClient.POSTEmpty(dropUrl).futureValue
+  }
   def find(utr: String) = {
     httpClient.GET(findUrlBase + utr).futureValue
   }
@@ -37,7 +40,14 @@ class IaTests extends ItSpec {
     "be able to check if a utr not in the db" in {
       uploadUtrs(utrListJson)
       val findResult = find("1234567899")
-      findResult.status shouldBe 404
+      findResult.status shouldBe 204
+    }
+
+    "be able to drop the db" in {
+      uploadUtrs(utrListJson)
+      drop()
+      val findResult = find("1234567890")
+      findResult.status shouldBe 204
     }
   }
 }
