@@ -1,12 +1,14 @@
 package uk.gov.hmrc.tests
 
+import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.support.ItSpec
 
-class IaTests extends ItSpec {
+class IaTests extends ItSpec with BeforeAndAfterEach{
   val iaBaseUrl = "http://localhost:8051"
   val uploadUrl: String = iaBaseUrl + "/ia/upload"
   val dropUrl: String = iaBaseUrl + "/ia/drop"
+  val countUrl: String = iaBaseUrl + "/ia/count"
   val findUrlBase: String = iaBaseUrl + "/ia/"
 
   val utrListJson = Json.arr(
@@ -20,10 +22,17 @@ class IaTests extends ItSpec {
   def drop() = {
     httpClient.POSTEmpty(dropUrl).futureValue
   }
+  def count() = {
+    httpClient.GET(countUrl).futureValue
+  }
+
   def find(utr: String) = {
     httpClient.GET(findUrlBase + utr).futureValue
   }
 
+  override def beforeEach() {
+    drop()
+  }
   "client" should {
 
     "be able to upload the utrs and get how many where updated back" in {
@@ -39,7 +48,7 @@ class IaTests extends ItSpec {
     }
     "be able to check if a utr not in the db" in {
       uploadUtrs(utrListJson)
-      val findResult = find("1234567899")
+      val findResult = find("9999999999")
       findResult.status shouldBe 204
     }
 
@@ -48,6 +57,13 @@ class IaTests extends ItSpec {
       drop()
       val findResult = find("1234567890")
       findResult.status shouldBe 204
+    }
+    "be able see the number of records in the db in" in {
+      uploadUtrs(utrListJson)
+
+      val countResult = count()
+      countResult.status shouldBe 200
+      countResult.body.toString shouldBe "Total number of records is 2"
     }
   }
 }
