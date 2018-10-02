@@ -26,6 +26,9 @@ class GreenUtrService @Inject()(repo:ValidUtrRepo) {
   def drop()(implicit ec:ExecutionContext):Future[Unit] = {
     repo.removeAll().map(_ => ())
   }
+  def count()(implicit ec:ExecutionContext) = {
+    repo.count
+  }
   def bulkInsert(greenListedUtr:List[GreenUtr])(implicit ec:ExecutionContext) = {
     repo.bulkInsert(greenListedUtr).map{
       wr => wr.totalN
