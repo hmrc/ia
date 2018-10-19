@@ -33,7 +33,6 @@ lazy val microservice = Project(appName, file("."))
     parallelExecution in IntegrationTest          := false,
     addTestReportOption(IntegrationTest, "int-test-reports")
   )
-  .settings(makePublicallyAvailableOnBintray := true)
   .settings(
     resolvers += Resolver.jcenterRepo
   )
