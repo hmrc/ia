@@ -14,11 +14,12 @@ lazy val scoverageSettings = {
   )
 }
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala,SbtArtifactory, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .settings(
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test(),
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
+  .settings(majorVersion := 0)
   .settings(
     publishingSettings ++ scoverageSettings: _*
   )
@@ -32,6 +33,7 @@ lazy val microservice = Project(appName, file("."))
     parallelExecution in IntegrationTest          := false,
     addTestReportOption(IntegrationTest, "int-test-reports")
   )
+  .settings(makePublicallyAvailableOnBintray := true)
   .settings(
     resolvers += Resolver.jcenterRepo
   )
