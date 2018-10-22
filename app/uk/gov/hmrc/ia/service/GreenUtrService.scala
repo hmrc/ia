@@ -18,22 +18,28 @@ package uk.gov.hmrc.ia.service
 
 import javax.inject.Inject
 import uk.gov.hmrc.ia.domain.GreenUtr
-import uk.gov.hmrc.ia.repository.ValidUtrRepo
+import uk.gov.hmrc.ia.repository.{CollectionNameRepo, ValidUtrRepo}
 
 import scala.concurrent.{ExecutionContext, Future}
-class GreenUtrService @Inject()(repo:ValidUtrRepo) {
+class GreenUtrService @Inject()(repo:ValidUtrRepo,tempRepo:CollectionNameRepo){
 
-  def drop()(implicit ec:ExecutionContext):Future[Unit] = {
-    repo.removeAll().map(_ => ())
+
+  def bulkInsert(greenListedUtr:List[GreenUtr])(implicit ec:ExecutionContext) = {
+    tempRepo.bulkInsert(greenListedUtr).map{
+      wr => wr.totalN
+    }
+  }
+
+  def replaceDb()(implicit ec:ExecutionContext):Future[Unit] = {
+    for{
+    _ <-  tempRepo.collection.rename(repo.collection.db.name,true)
+    drop <-  tempRepo.collection.drop(true).map(_ => ())
+    }yield drop
   }
   def count()(implicit ec:ExecutionContext) = {
     repo.count
   }
-  def bulkInsert(greenListedUtr:List[GreenUtr])(implicit ec:ExecutionContext) = {
-    repo.bulkInsert(greenListedUtr).map{
-      wr => wr.totalN
-    }
-  }
+
   def isGreenUtr(utr:String)(implicit ec:ExecutionContext):Future[Boolean] = {
     //todo should it even be possable to have more then one of the sma ut perhaps can I turn it into an id?
     repo.find("utr" -> utr).map(_.headOption.fold(false)(_ => true))

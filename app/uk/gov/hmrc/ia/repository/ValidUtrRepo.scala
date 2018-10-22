@@ -18,8 +18,14 @@ package uk.gov.hmrc.ia.repository
 
 import javax.inject.Inject
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.DBMetaCommands
 import uk.gov.hmrc.ia.domain.GreenUtr
 
 class ValidUtrRepo @Inject() (reactiveMongoComponent: ReactiveMongoComponent)
   extends Repo[GreenUtr, String]("utr", reactiveMongoComponent) {
+}
+
+
+class CollectionNameRepo @Inject() (reactiveMongoComponent: ReactiveMongoComponent  with DBMetaCommands)
+  extends Repo[GreenUtr, String]("utr-temp", reactiveMongoComponent){
 }

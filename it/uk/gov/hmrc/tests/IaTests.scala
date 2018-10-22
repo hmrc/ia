@@ -10,6 +10,7 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
   val dropUrl: String = iaBaseUrl + "/ia/drop"
   val countUrl: String = iaBaseUrl + "/ia/count"
   val findUrlBase: String = iaBaseUrl + "/ia/"
+  val startUrl: String = iaBaseUrl + "/ia/upload/start"
 
   val utrListJson = Json.arr(
     Json.obj("utr" -> "1234567890"),
@@ -26,6 +27,10 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
     httpClient.GET(countUrl).futureValue
   }
 
+  def start() = {
+    httpClient.GET(startUrl).futureValue
+  }
+
   def find(utr: String) = {
     httpClient.GET(findUrlBase + utr).futureValue
   }
@@ -34,6 +39,12 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
     drop()
   }
   "client" should {
+
+    "be able create a new file and return the path in" in {
+      val resultPost = start()
+      resultPost.status shouldBe 200
+      resultPost.body shouldBe "tmp/upload.csv"
+    }
 
     "be able to upload the utrs and get how many where updated back" in {
       val resultPost = uploadUtrs(utrListJson)

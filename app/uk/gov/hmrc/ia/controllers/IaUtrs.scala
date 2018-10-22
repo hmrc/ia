@@ -17,7 +17,6 @@
 package uk.gov.hmrc.ia.controllers
 
 import com.google.inject.Inject
-import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.Action
 import uk.gov.hmrc.ia.domain.GreenUtr
@@ -31,7 +30,7 @@ class IaUtrs @Inject()(service: GreenUtrService) extends BaseController{
 
 
   def drop() = Action.async{ implicit request =>
-    service.drop().map(_ => Ok(""))
+    service.replaceDb().map(_ => Ok(""))
   }
 
   def count() = Action.async{ implicit request =>
@@ -39,10 +38,11 @@ class IaUtrs @Inject()(service: GreenUtrService) extends BaseController{
       Ok(s"Total number of records is $records")
     })
   }
+
+
   def upload(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[List[GreenUtr]] match {
       case JsSuccess(utrs, _) =>
-        //todo if what they upload ok or do they want the delta ?
         service.bulkInsert(utrs).map(noOfInserts => Ok(s"$noOfInserts"))
       case jsE: JsError => Future.successful(BadRequest(jsE.toString))
     }
