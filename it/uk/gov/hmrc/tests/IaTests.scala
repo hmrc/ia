@@ -10,7 +10,6 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
   val dropUrl: String = iaBaseUrl + "/ia/drop"
   val countUrl: String = iaBaseUrl + "/ia/count"
   val findUrlBase: String = iaBaseUrl + "/ia/"
-  val startUrl: String = iaBaseUrl + "/ia/upload/start"
 
   val utrListJson = Json.arr(
     Json.obj("utr" -> "1234567890"),
@@ -27,9 +26,6 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
     httpClient.GET(countUrl).futureValue
   }
 
-  def start() = {
-    httpClient.GET(startUrl).futureValue
-  }
 
   def find(utr: String) = {
     httpClient.GET(findUrlBase + utr).futureValue
@@ -40,11 +36,6 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
   }
   "client" should {
 
-    "be able create a new file and return the path in" in {
-      val resultPost = start()
-      resultPost.status shouldBe 200
-      resultPost.body shouldBe "tmp/upload.csv"
-    }
 
     "be able to upload the utrs and get how many where updated back" in {
       val resultPost = uploadUtrs(utrListJson)
@@ -74,7 +65,13 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
 
       val countResult = count()
       countResult.status shouldBe 200
-      countResult.body.toString shouldBe "Total number of records is 2"
+      countResult.body.toString shouldBe "DbCount(SSTTP is currently pointed to DataBaseutr-two,count DataBase 1 is 2,count DataBase 2 is 0)"
+    }
+
+    "when we call drop is should empty one db and point to the other one " in {
+      uploadUtrs(utrListJson)
+      val countResult = count()
+      countResult.body.toString shouldBe "DbCount(SSTTP is currently pointed to DataBaseutr-one,count DataBase 1 is 2,count DataBase 2 is 2)"
     }
   }
 }

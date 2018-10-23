@@ -34,9 +34,7 @@ class IaUtrs @Inject()(service: GreenUtrService) extends BaseController{
   }
 
   def count() = Action.async{ implicit request =>
-    service.count().map(records =>{
-      Ok(s"Total number of records is $records")
-    })
+    service.count().map(records =>{ Ok(records.toString)})
   }
 
 
