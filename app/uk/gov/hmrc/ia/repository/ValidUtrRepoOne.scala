@@ -18,13 +18,19 @@ package uk.gov.hmrc.ia.repository
 
 import javax.inject.Inject
 import play.modules.reactivemongo.ReactiveMongoComponent
-import uk.gov.hmrc.ia.domain.GreenUtr
+import uk.gov.hmrc.ia.domain.CurrentActiveDbs._
+import uk.gov.hmrc.ia.domain.{ActiveDb, GreenUtr}
 
 class ValidUtrRepoOne @Inject()(reactiveMongoComponent: ReactiveMongoComponent)
-  extends Repo[GreenUtr, String]("utr-two", reactiveMongoComponent) {
+  extends Repo[GreenUtr, String](DB1.toString, reactiveMongoComponent) {
 }
 
 
 class ValidUtrRepoTwo @Inject()(reactiveMongoComponent: ReactiveMongoComponent)
-  extends Repo[GreenUtr, String]("utr-one", reactiveMongoComponent){
+  extends Repo[GreenUtr, String](DB2.toString, reactiveMongoComponent){
 }
+
+class ActiveRepo @Inject()(reactiveMongoComponent: ReactiveMongoComponent)
+  extends Repo[ActiveDb, String]("active-repo", reactiveMongoComponent){
+}
+

@@ -35,14 +35,14 @@ class GreenUtrServiceSpec extends Spec  with MockitoSugar{
 
   "The  GreenUtrService should insert Utrs" in {
     when(mockValidRepoOne.bulkInsert(validUtrs)).thenReturn(Future.successful(writeResult))
-    val result: Unit =  greenUtrService.bulkInsert(validUtrs).futureValue
+    val result: Unit =  greenUtrService.upload(validUtrs).futureValue
     result shouldBe ()
   }
 
   "Return an exception if it fails to insert " in {
     when(mockValidRepoOne.bulkInsert(validUtrs)).thenReturn(Future.failed[MultiBulkWriteResult](new BulkInsertRejected()))
     intercept[RuntimeException] {
-      greenUtrService.bulkInsert(validUtrs).futureValue
+      greenUtrService.upload(validUtrs).futureValue
     }.getMessage contains "No objects inserted. Error converting some or all to JSON" shouldBe true
   }
 

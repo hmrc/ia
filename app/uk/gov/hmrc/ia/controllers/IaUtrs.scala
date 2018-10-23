@@ -17,33 +17,27 @@
 package uk.gov.hmrc.ia.controllers
 
 import com.google.inject.Inject
-import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import play.api.mvc.Action
 import uk.gov.hmrc.ia.domain.GreenUtr
 import uk.gov.hmrc.ia.service.GreenUtrService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class IaUtrs @Inject()(service: GreenUtrService) extends BaseController{
 
 
   def drop() = Action.async{ implicit request =>
-    service.replaceDb().map(_ => Ok(""))
+    service.replaceDb().map(_ => Ok)
   }
 
   def count() = Action.async{ implicit request =>
-    service.count().map(records =>{ Ok(records.toString)})
+    service.count().map(records =>{ Ok(s"$records")})
   }
 
 
-  def upload(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    request.body.validate[List[GreenUtr]] match {
-      case JsSuccess(utrs, _) =>
-        service.bulkInsert(utrs).map(noOfInserts => Ok(s"$noOfInserts"))
-      case jsE: JsError => Future.successful(BadRequest(jsE.toString))
-    }
+  def upload() = Action.async(parse.json[List[GreenUtr]]) { implicit request =>
+        service.upload(request.body).map(noOfInserts => Ok(s"$noOfInserts"))
   }
   def find(utr:String) = Action.async{ implicit request =>
     service.isGreenUtr(utr).map{
