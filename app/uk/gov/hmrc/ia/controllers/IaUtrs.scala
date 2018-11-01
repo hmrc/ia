@@ -27,8 +27,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class IaUtrs @Inject()(service: GreenUtrService) extends BaseController{
 
 
-  def drop() = Action.async{ implicit request =>
-    service.replaceDb().map(_ => Ok)
+  def switch() = Action.async{ implicit request =>
+    service.switchDB().map(_ => Ok)
   }
 
   def count() = Action.async{ implicit request =>
@@ -37,8 +37,12 @@ class IaUtrs @Inject()(service: GreenUtrService) extends BaseController{
 
 
   def upload() = Action.async(parse.json[List[GreenUtr]]) { implicit request =>
-        service.upload(request.body).map(noOfInserts => Ok(s"$noOfInserts"))
+        service.uploadBulkInActiveDb(request.body).map(noOfInserts => Ok(s"$noOfInserts"))
   }
+  def uploadOne(utr:String) = Action.async { implicit request =>
+    service.uploadActiveDb(List(GreenUtr(utr))).map(noOfInserts => Ok(s"$noOfInserts"))
+  }
+
   def find(utr:String) = Action.async{ implicit request =>
     service.isGreenUtr(utr).map{
     case true => Ok("")

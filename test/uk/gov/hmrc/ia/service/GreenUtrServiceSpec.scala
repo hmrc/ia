@@ -18,7 +18,7 @@ package uk.gov.hmrc.ia.service
 
 import org.scalatest.mockito.MockitoSugar
 import reactivemongo.api.commands.MultiBulkWriteResult
-import uk.gov.hmrc.ia.repository.{ValidUtrRepoOne, ValidUtrRepoTwo}
+import uk.gov.hmrc.ia.repository.{ActiveRepo, ValidUtrRepoOne, ValidUtrRepoTwo}
 import uk.gov.hmrc.ia.support.Spec
 import uk.gov.hmrc.ia.support.TestData.validUtrs
 import org.mockito.Mockito.when
@@ -30,19 +30,20 @@ class GreenUtrServiceSpec extends Spec  with MockitoSugar{
   class BulkInsertRejected extends Exception("No objects inserted. Error converting some or all to JSON")
   val mockValidRepoOne = mock[ValidUtrRepoOne]
   val mockValidRepoTwo = mock[ValidUtrRepoTwo]
-  val greenUtrService = new GreenUtrService(mockValidRepoOne,mockValidRepoTwo)
+  val mockActiveRepo = mock[ActiveRepo]
+  val greenUtrService = new GreenUtrService(mockValidRepoOne,mockValidRepoTwo,mockActiveRepo)
   val writeResult = MultiBulkWriteResult()
 
   "The  GreenUtrService should insert Utrs" in {
     when(mockValidRepoOne.bulkInsert(validUtrs)).thenReturn(Future.successful(writeResult))
-    val result: Unit =  greenUtrService.upload(validUtrs).futureValue
+    val result: Unit =  greenUtrService.uploadBulkInActiveDb(validUtrs).futureValue
     result shouldBe ()
   }
 
   "Return an exception if it fails to insert " in {
     when(mockValidRepoOne.bulkInsert(validUtrs)).thenReturn(Future.failed[MultiBulkWriteResult](new BulkInsertRejected()))
     intercept[RuntimeException] {
-      greenUtrService.upload(validUtrs).futureValue
+      greenUtrService.uploadBulkInActiveDb(validUtrs).futureValue
     }.getMessage contains "No objects inserted. Error converting some or all to JSON" shouldBe true
   }
 

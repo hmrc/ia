@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.ia.domain
 
-import play.api.libs.json.{Format, Json}
 import enumeratum._
+import play.api.libs.json.{Format, Json}
 sealed abstract class CurrentActiveDb extends EnumEntry
 
 object CurrentActiveDbs extends Enum[CurrentActiveDb] {
@@ -30,7 +30,7 @@ object CurrentActiveDbs extends Enum[CurrentActiveDb] {
 }
 
 
-case class ActiveDb(activeDb: CurrentActiveDb)
+case class ActiveDb(id:Int = 1,activeDb: CurrentActiveDb)
 
 object ActiveDb{
 
