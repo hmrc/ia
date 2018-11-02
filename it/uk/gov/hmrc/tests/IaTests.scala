@@ -19,6 +19,9 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
   def uploadUtrs(request: JsValue) = {
     httpClient.POST(uploadUrl, request).futureValue
   }
+  def uploadUtr(utr: String) = {
+    httpClient.POSTEmpty(uploadUrl + s"/$utr").futureValue
+  }
   def switch() = {
     httpClient.POSTEmpty(switchUrl).futureValue
   }
@@ -38,6 +41,12 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
       val resultPost = uploadUtrs(utrListJson)
       resultPost.status shouldBe 200
       resultPost.body shouldBe "2"
+    }
+
+
+    "be able to upload a single urt" in {
+      val resultPost = uploadUtr("999999999")
+      resultPost.status shouldBe 200
     }
 
     "be able to check if a utr is in the db" in {

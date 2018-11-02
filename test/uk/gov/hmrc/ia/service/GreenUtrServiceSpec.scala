@@ -40,6 +40,12 @@ class GreenUtrServiceSpec extends Spec  with MockitoSugar{
     val result: Unit =  greenUtrService.uploadBulkInActiveDb(validUtrs).futureValue
     result shouldBe ()
   }
+  "The  GreenUtrService should insert Utrs into the active db" in {
+    when(mockValidRepoOne.bulkInsert(validUtrs)).thenReturn(Future.successful(writeResult))
+    val result: Unit =  greenUtrService.uploadActiveDb(validUtrs).futureValue
+    result shouldBe ()
+  }
+
 
   "Return an exception if it fails to insert " in {
     when(mockValidRepoTwo.bulkInsert(validUtrs)).thenReturn(Future.failed[MultiBulkWriteResult](new BulkInsertRejected()))
