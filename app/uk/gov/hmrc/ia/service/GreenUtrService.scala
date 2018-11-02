@@ -17,25 +17,53 @@
 package uk.gov.hmrc.ia.service
 
 import javax.inject.Inject
-import uk.gov.hmrc.ia.domain.GreenUtr
-import uk.gov.hmrc.ia.repository.ValidUtrRepo
+import play.api.libs.json.Json
+import uk.gov.hmrc.ia.domain.CurrentActiveDbs.{DB1, DB2}
+import uk.gov.hmrc.ia.domain.{ActiveDb, GreenUtr}
+import uk.gov.hmrc.ia.repository.{ActiveRepo, Repo, ValidUtrRepoOne, ValidUtrRepoTwo}
 
 import scala.concurrent.{ExecutionContext, Future}
-class GreenUtrService @Inject()(repo:ValidUtrRepo) {
 
-  def drop()(implicit ec:ExecutionContext):Future[Unit] = {
-    repo.removeAll().map(_ => ())
+class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoTwo, currantActiveDb: ActiveRepo) {
+  def uploadBulkInActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext) = {
+    getInActiveDb().flatMap(_.bulkInsert(greenListedUtr)).map(_.totalN)
   }
-  def count()(implicit ec:ExecutionContext) = {
-    repo.count
+
+  def uploadActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext) = {
+    getActiveDb().flatMap(_.bulkInsert(greenListedUtr))
   }
-  def bulkInsert(greenListedUtr:List[GreenUtr])(implicit ec:ExecutionContext) = {
-    repo.bulkInsert(greenListedUtr).map{
-      wr => wr.totalN
-    }
+  def count()(implicit ec: ExecutionContext) = {
+  for{
+   result <-  currantActiveDb.getActiveDb()
+   repoOne <- repoOne.count
+   repoTwo <- repoTwo.count
+  }yield  DbCount(s"SSTTP is currently pointed to DataBase ${result}",
+    s"count DataBase 1 is $repoOne", s"count DataBase 2 is $repoTwo")
   }
-  def isGreenUtr(utr:String)(implicit ec:ExecutionContext):Future[Boolean] = {
-    //todo should it even be possable to have more then one of the sma ut perhaps can I turn it into an id?
-    repo.find("utr" -> utr).map(_.headOption.fold(false)(_ => true))
+
+  def isGreenUtr(utr: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    getActiveDb.flatMap(_.find("utr" -> utr).map(_.headOption.fold(false)(_ => true)))
   }
+
+  def switchDB()(implicit ec: ExecutionContext): Future[Unit] = {
+    currantActiveDb.getActiveDb().map {
+      case DB1 => currantActiveDb.setDb(ActiveDb(1,DB2)).map(_ => repoOne.drop)
+      case DB2 => currantActiveDb.setDb(ActiveDb(1,DB1)).map(_ => repoTwo.drop)
+    }.map(_ => ())
+  }
+
+  private def getActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map{
+    case DB1 => repoOne
+    case DB2 => repoTwo
+  }
+  private def getInActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map{
+    case DB1 => repoTwo
+    case DB2 => repoOne
+  }
+
+}
+case class DbCount(dbPointedTo: String, db1: String, db2: String)
+
+object DbCount {
+  implicit val formatDbCount = Json.format[DbCount]
 }

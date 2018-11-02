@@ -14,12 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ia.repository
+package uk.gov.hmrc.ia.domain
 
-import javax.inject.Inject
-import play.modules.reactivemongo.ReactiveMongoComponent
-import uk.gov.hmrc.ia.domain.GreenUtr
+import enumeratum._
+import play.api.libs.json.{Format, Json}
+sealed abstract class CurrentActiveDb extends EnumEntry
 
-class ValidUtrRepo @Inject() (reactiveMongoComponent: ReactiveMongoComponent)
-  extends Repo[GreenUtr, String]("utr", reactiveMongoComponent) {
+object CurrentActiveDbs extends Enum[CurrentActiveDb] {
+
+  case object DB1 extends CurrentActiveDb
+  case object DB2 extends CurrentActiveDb
+
+  override def values = findValues
+
+}
+
+
+case class ActiveDb(id:Int = 1,activeDb: CurrentActiveDb)
+
+object ActiveDb{
+
+  implicit val dbFormat: Format[CurrentActiveDb] = EnumFormat(CurrentActiveDbs)
+  implicit val activeDbFormat = Json.format[ActiveDb]
 }
