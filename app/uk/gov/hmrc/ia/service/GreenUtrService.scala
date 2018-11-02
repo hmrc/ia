@@ -26,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoTwo, currantActiveDb: ActiveRepo) {
   def uploadBulkInActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext) = {
-    getInActiveDb().flatMap(_.bulkInsert(greenListedUtr))
+    getInActiveDb().flatMap(_.bulkInsert(greenListedUtr)).map(_.totalN)
   }
 
   def uploadActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext) = {
