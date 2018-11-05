@@ -1,6 +1,9 @@
 # microservice specific routes
 
 POST        /switch              uk.gov.hmrc.ia.controllers.IaUtrs.switch()
+POST        /drop-all            uk.gov.hmrc.ia.controllers.IaUtrs.dropAll()
+
+POST        /set/:db             uk.gov.hmrc.ia.controllers.IaUtrs.setActiveDB(db)
 POST        /upload              uk.gov.hmrc.ia.controllers.IaUtrs.upload()
 POST        /upload/:utr         uk.gov.hmrc.ia.controllers.IaUtrs.uploadOne(utr:String)
 GET         /count               uk.gov.hmrc.ia.controllers.IaUtrs.count()

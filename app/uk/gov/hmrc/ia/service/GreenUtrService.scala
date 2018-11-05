@@ -19,7 +19,7 @@ package uk.gov.hmrc.ia.service
 import javax.inject.Inject
 import play.api.libs.json.Json
 import uk.gov.hmrc.ia.domain.CurrentActiveDbs.{DB1, DB2}
-import uk.gov.hmrc.ia.domain.{ActiveDb, GreenUtr}
+import uk.gov.hmrc.ia.domain.{ActiveDb, CurrentActiveDb, GreenUtr}
 import uk.gov.hmrc.ia.repository.{ActiveRepo, Repo, ValidUtrRepoOne, ValidUtrRepoTwo}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,13 +32,14 @@ class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoT
   def uploadActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext) = {
     getActiveDb().flatMap(_.bulkInsert(greenListedUtr))
   }
+
   def count()(implicit ec: ExecutionContext) = {
-  for{
-   result <-  currantActiveDb.getActiveDb()
-   repoOne <- repoOne.count
-   repoTwo <- repoTwo.count
-  }yield  DbCount(s"SSTTP is currently pointed to DataBase ${result}",
-    s"count DataBase 1 is $repoOne", s"count DataBase 2 is $repoTwo")
+    for {
+      result <- currantActiveDb.getActiveDb()
+      repoOne <- repoOne.count
+      repoTwo <- repoTwo.count
+    } yield DbCount(s"SSTTP is currently pointed to DataBase ${result}",
+      s"count DataBase 1 is $repoOne", s"count DataBase 2 is $repoTwo")
   }
 
   def isGreenUtr(utr: String)(implicit ec: ExecutionContext): Future[Boolean] = {
@@ -47,21 +48,35 @@ class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoT
 
   def switchDB()(implicit ec: ExecutionContext): Future[Unit] = {
     currantActiveDb.getActiveDb().map {
-      case DB1 => currantActiveDb.setDb(ActiveDb(1,DB2)).map(_ => repoOne.drop)
-      case DB2 => currantActiveDb.setDb(ActiveDb(1,DB1)).map(_ => repoTwo.drop)
+      case DB1 => setDb(DB2).map(_ => repoOne.drop)
+      case DB2 => setDb(DB1).map(_ => repoTwo.drop)
     }.map(_ => ())
   }
 
-  private def getActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map{
+  def dropAll()(implicit ec: ExecutionContext): Future[Unit] = {
+    for {
+      _ <- repoOne.drop
+      _ <- repoTwo.drop
+     } yield ()
+  }
+
+
+  def setDb(activeDb: CurrentActiveDb)(implicit ec: ExecutionContext): Future[Unit] = {
+    currantActiveDb.setDb(ActiveDb(1, activeDb))
+  }
+
+  private def getActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map {
     case DB1 => repoOne
     case DB2 => repoTwo
   }
-  private def getInActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map{
+
+  private def getInActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map {
     case DB1 => repoTwo
     case DB2 => repoOne
   }
 
 }
+
 case class DbCount(dbPointedTo: String, db1: String, db2: String)
 
 object DbCount {

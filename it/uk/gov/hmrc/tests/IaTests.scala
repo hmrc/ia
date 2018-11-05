@@ -9,6 +9,8 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
   val uploadUrl: String = iaBaseUrl + "/ia/upload"
   val switchUrl: String = iaBaseUrl + "/ia/switch"
   val countUrl: String = iaBaseUrl + "/ia/count"
+  val dropUrl: String = iaBaseUrl + "/ia/drop-all"
+  val setDbUrl: String = iaBaseUrl + "/ia/set/"
   val findUrlBase: String = iaBaseUrl + "/ia/"
 
   val utrListJson = Json.arr(
@@ -28,14 +30,24 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
   def count() = {
     httpClient.GET(countUrl).futureValue
   }
-
+  def drop() = {
+    httpClient.POSTEmpty(dropUrl).futureValue
+  }
+  def setDb(dbName:String) = {
+    httpClient.POSTEmpty(setDbUrl+dbName).futureValue
+  }
 
   def find(utr: String) = {
     httpClient.GET(findUrlBase + utr).futureValue
   }
+//todo fix on mpnday make more rbust
+
+  override def beforeEach() = {
+    drop()
+    setDb("DB1")
+  }
 
   "client" should {
-
 
     "be able to upload the utrs and get how many where updated back" in {
       val resultPost = uploadUtrs(utrListJson)
@@ -50,7 +62,7 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
     }
 
     "be able to check if a utr is in the db" in {
-      uploadUtrs(utrListJson)
+      uploadUtr("1234567890")
       val findResult = find("1234567890")
       findResult.status shouldBe 200
     }
@@ -62,20 +74,24 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
 
     "be able to drop the db" in {
       uploadUtrs(utrListJson)
-      switch()
+      drop()
       val findResult = find("1234567890")
-      findResult.status shouldBe 200
+      findResult.status shouldBe 204
     }
-    "be able see the number of records in the db in" in {
+    "be able see to upload to the inactive db" in {
       uploadUtrs(utrListJson)
 
       val countResult = count()
       countResult.status shouldBe 200
+      countResult.body shouldBe "DbCount(SSTTP is currently pointed to DataBase DB1,count DataBase 1 is 0,count DataBase 2 is 2)"
     }
     //todo write more and better it tests no time to do this sprint
     "be able to switch to another db and drop the other one " in {
+      val resultPost = uploadUtrs(utrListJson)
       switch()
-
+      val countResult = count()
+      countResult.status shouldBe 200
+      countResult.body shouldBe "DbCount(SSTTP is currently pointed to DataBase DB2,count DataBase 1 is 0,count DataBase 2 is 2)"
     }
   }
 }
