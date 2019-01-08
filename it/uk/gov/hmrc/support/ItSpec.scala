@@ -1,5 +1,6 @@
 package uk.gov.hmrc.support
 
+import com.typesafe.config.Config
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{AppendedClues, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -19,7 +20,7 @@ trait ItSpec extends WordSpec with ScalaFutures with IntegrationPatience with Ma
       .configure(
       ).build()
 
-  override lazy val port: Int = 8051
+  override lazy val port: Int = 9999
   implicit lazy val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -29,5 +30,7 @@ trait ItSpec extends WordSpec with ScalaFutures with IntegrationPatience with Ma
     override def wsClient: WSClient = app.injector.instanceOf(classOf[WSClient])
 
     override val hooks: Seq[HttpHook] = Nil
+
+    override protected def configuration: Option[Config] = None
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@ package uk.gov.hmrc.ia.domain
 
 import enumeratum._
 import play.api.libs.json.{Format, Json}
+
 sealed abstract class CurrentActiveDb extends EnumEntry
 
 object CurrentActiveDbs extends Enum[CurrentActiveDb] {
 
   case object DB1 extends CurrentActiveDb
+
   case object DB2 extends CurrentActiveDb
 
   override def values = findValues
@@ -30,9 +32,9 @@ object CurrentActiveDbs extends Enum[CurrentActiveDb] {
 }
 
 
-case class ActiveDb(id:Int = 1,activeDb: CurrentActiveDb)
+case class ActiveDb(id: Int = 1, activeDb: CurrentActiveDb)
 
-object ActiveDb{
+object ActiveDb {
 
   implicit val dbFormat: Format[CurrentActiveDb] = EnumFormat(CurrentActiveDbs)
   implicit val activeDbFormat = Json.format[ActiveDb]
