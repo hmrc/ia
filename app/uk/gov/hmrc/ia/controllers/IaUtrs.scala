@@ -17,7 +17,7 @@
 package uk.gov.hmrc.ia.controllers
 
 import com.google.inject.Inject
-import play.api.mvc.Action
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.ia.domain.{CurrentActiveDbs, GreenUtr}
 import uk.gov.hmrc.ia.service.GreenUtrService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -27,31 +27,31 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class IaUtrs @Inject()(service: GreenUtrService) extends BaseController {
 
 
-  def switch() = Action.async { implicit request =>
+  def switch(): Action[AnyContent] = Action.async { implicit request =>
     service.switchDB().map(_ => Ok)
   }
 
-  def dropAll() = Action.async { implicit request =>
+  def dropAll(): Action[AnyContent] = Action.async { implicit request =>
     service.dropAll().map(_ => Ok)
   }
 
-  def setActiveDB(db:String) = Action.async { implicit request =>
+  def setActiveDB(db:String): Action[AnyContent] = Action.async { implicit request =>
 
     service.setDb(CurrentActiveDbs.withName(db)).map(_ => Ok)
   }
 
-  def count() = Action.async { implicit request =>
+  def count(): Action[AnyContent] = Action.async { implicit request =>
     service.count().map(records => {
       Ok(s"$records")
     })
   }
 
 
-  def upload() = Action.async(parse.json[List[GreenUtr]]) { implicit request =>
+  def upload(): Action[List[GreenUtr]] = Action.async(parse.json[List[GreenUtr]]) { implicit request =>
     service.uploadBulkInActiveDb(request.body).map(noOfInserts => Ok(s"$noOfInserts"))
   }
 
-  def uploadOne(utr: String) = Action.async { implicit request =>
+  def uploadOne(utr: String): Action[AnyContent] = Action.async { implicit request =>
     service.uploadActiveDb(List(GreenUtr(utr))).map(noOfInserts => Ok(s"$noOfInserts"))
   }
 
