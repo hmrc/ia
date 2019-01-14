@@ -1,48 +1,69 @@
+/*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.tests
 
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.support.ItSpec
 
-class IaTests extends ItSpec with BeforeAndAfterEach{
-  val iaBaseUrl = "http://localhost:8051"
-  val uploadUrl: String = iaBaseUrl + "/ia/upload"
-  val switchUrl: String = iaBaseUrl + "/ia/switch"
-  val countUrl: String = iaBaseUrl + "/ia/count"
-  val dropUrl: String = iaBaseUrl + "/ia/drop-all"
-  val setDbUrl: String = iaBaseUrl + "/ia/set/"
-  val findUrlBase: String = iaBaseUrl + "/ia/"
+class IaTests extends ItSpec with BeforeAndAfterEach {
+  private val iaBaseUrl = "http://localhost:8051"
+  private val uploadUrl: String = iaBaseUrl + "/ia/upload"
+  private val switchUrl: String = iaBaseUrl + "/ia/switch"
+  private val countUrl: String = iaBaseUrl + "/ia/count"
+  private val dropUrl: String = iaBaseUrl + "/ia/drop-all"
+  private val setDbUrl: String = iaBaseUrl + "/ia/set/"
+  private val findUrlBase: String = iaBaseUrl + "/ia/"
 
-  val utrListJson = Json.arr(
+  private val utrListJson = Json.arr(
     Json.obj("utr" -> "1234567890"),
     Json.obj("utr" -> "1234567891")
   )
 
-  def uploadUtrs(request: JsValue) = {
+  private def uploadUtrs(request: JsValue) = {
     httpClient.POST(uploadUrl, request).futureValue
   }
-  def uploadUtr(utr: String) = {
+
+  private def uploadUtr(utr: String) = {
     httpClient.POSTEmpty(uploadUrl + s"/$utr").futureValue
   }
-  def switch() = {
+
+  private def switch() = {
     httpClient.POSTEmpty(switchUrl).futureValue
   }
-  def count() = {
+
+  private def count() = {
     httpClient.GET(countUrl).futureValue
   }
-  def drop() = {
+
+  private def drop() = {
     httpClient.POSTEmpty(dropUrl).futureValue
   }
-  def setDb(dbName:String) = {
-    httpClient.POSTEmpty(setDbUrl+dbName).futureValue
+
+  private def setDb(dbName:String) = {
+    httpClient.POSTEmpty(setDbUrl + dbName).futureValue
   }
 
-  def find(utr: String) = {
+  private def find(utr: String) = {
     httpClient.GET(findUrlBase + utr).futureValue
   }
-//todo fix on mpnday make more rbust
+//todo fix on someday make more rbust
 
-  override def beforeEach() = {
+  override def beforeEach(): Unit = {
     drop()
     setDb("DB1")
   }
@@ -66,6 +87,7 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
       val findResult = find("1234567890")
       findResult.status shouldBe 200
     }
+
     "be able to check if a utr not in the db" in {
       uploadUtrs(utrListJson)
       val findResult = find("9999999999")
@@ -78,6 +100,7 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
       val findResult = find("1234567890")
       findResult.status shouldBe 204
     }
+
     "be able see to upload to the inactive db" in {
       uploadUtrs(utrListJson)
 
@@ -85,9 +108,10 @@ class IaTests extends ItSpec with BeforeAndAfterEach{
       countResult.status shouldBe 200
       countResult.body shouldBe "DbCount(SSTTP is currently pointed to DataBase DB1,count DataBase 1 is 0,count DataBase 2 is 2)"
     }
+
     //todo write more and better it tests no time to do this sprint
     "be able to switch to another db and drop the other one " in {
-      val resultPost = uploadUtrs(utrListJson)
+      uploadUtrs(utrListJson)
       switch()
       val countResult = count()
       countResult.status shouldBe 200

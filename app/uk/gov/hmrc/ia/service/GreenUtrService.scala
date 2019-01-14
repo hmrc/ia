@@ -17,7 +17,8 @@
 package uk.gov.hmrc.ia.service
 
 import javax.inject.Inject
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
+import reactivemongo.api.commands.MultiBulkWriteResult
 import uk.gov.hmrc.ia.domain.CurrentActiveDbs.{DB1, DB2}
 import uk.gov.hmrc.ia.domain.{ActiveDb, CurrentActiveDb, GreenUtr}
 import uk.gov.hmrc.ia.repository.{ActiveRepo, Repo, ValidUtrRepoOne, ValidUtrRepoTwo}
@@ -25,20 +26,20 @@ import uk.gov.hmrc.ia.repository.{ActiveRepo, Repo, ValidUtrRepoOne, ValidUtrRep
 import scala.concurrent.{ExecutionContext, Future}
 
 class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoTwo, currantActiveDb: ActiveRepo) {
-  def uploadBulkInActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext) = {
+  def uploadBulkInActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext): Future[Int] = {
     getInActiveDb().flatMap(_.bulkInsert(greenListedUtr)).map(_.totalN)
   }
 
-  def uploadActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext) = {
+  def uploadActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext): Future[MultiBulkWriteResult] = {
     getActiveDb().flatMap(_.bulkInsert(greenListedUtr))
   }
 
-  def count()(implicit ec: ExecutionContext) = {
+  def count()(implicit ec: ExecutionContext): Future[DbCount] = {
     for {
       result <- currantActiveDb.getActiveDb()
       repoOne <- repoOne.count
       repoTwo <- repoTwo.count
-    } yield DbCount(s"SSTTP is currently pointed to DataBase ${result}",
+    } yield DbCount(s"SSTTP is currently pointed to DataBase $result",
       s"count DataBase 1 is $repoOne", s"count DataBase 2 is $repoTwo")
   }
 
@@ -80,5 +81,5 @@ class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoT
 case class DbCount(dbPointedTo: String, db1: String, db2: String)
 
 object DbCount {
-  implicit val formatDbCount = Json.format[DbCount]
+  implicit val formatDbCount: OFormat[DbCount] = Json.format[DbCount]
 }
