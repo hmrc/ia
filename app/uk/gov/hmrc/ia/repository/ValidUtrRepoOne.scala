@@ -41,7 +41,7 @@ class ActiveRepo @Inject()(reactiveMongoComponent: ReactiveMongoComponent)
   val Id: String = "1" // This collection contains a single element
 
   def setDb(activeDb: ActiveDb)(implicit ec: ExecutionContext): Future[Unit] = {
-    collection.update(Json.obj("_id" -> Id), activeDb, upsert = true).map(_ => ())
+    collection.update(ordered = false).one(Json.obj("_id" -> Id), activeDb, upsert = true).map(_ => ())
       .andThen{
         case Failure(ex) => throw new Exception("Unable to set activeDb ", ex)
       }

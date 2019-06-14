@@ -17,14 +17,14 @@
 package uk.gov.hmrc.ia.controllers
 
 import com.google.inject.Inject
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.ia.domain.{CurrentActiveDbs, GreenUtr}
 import uk.gov.hmrc.ia.service.GreenUtrService
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IaUtrs @Inject()(service: GreenUtrService) extends BaseController {
+class IaUtrs @Inject()(service: GreenUtrService, cc: ControllerComponents) extends BackendController(cc) {
 
 
   def switch(): Action[AnyContent] = Action.async { implicit request =>

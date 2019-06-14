@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.ia.service
 
-import org.scalatest.mockito.MockitoSugar
-import reactivemongo.api.commands.MultiBulkWriteResult
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.ia.repository.{ActiveRepo, ValidUtrRepoOne, ValidUtrRepoTwo}
 import uk.gov.hmrc.ia.support.Spec
 import uk.gov.hmrc.ia.support.TestData.validUtrs
 import org.mockito.Mockito.when
+import reactivemongo.api.commands.{MultiBulkWriteResult, Upserted, WriteError}
 import uk.gov.hmrc.ia.domain.{ActiveDb, GreenUtr}
 import uk.gov.hmrc.ia.domain.CurrentActiveDbs.{DB1, DB2}
 
@@ -33,7 +33,8 @@ class GreenUtrServiceSpec extends Spec  with MockitoSugar{
   val mockValidRepoTwo = mock[ValidUtrRepoTwo]
   val mockActiveRepo = mock[ActiveRepo]
   val greenUtrService = new GreenUtrService(mockValidRepoOne,mockValidRepoTwo,mockActiveRepo)
-  val writeResult = MultiBulkWriteResult()
+
+  val writeResult = MultiBulkWriteResult(true, 2, 0, Seq.empty[Upserted], Seq.empty[WriteError], None, None, None, 0)
   when(mockActiveRepo.getActiveDb()).thenReturn(Future.successful(DB1))
   "The  GreenUtrService should insert Utrs into the inactive db" in {
     when(mockValidRepoTwo.bulkInsert(validUtrs)).thenReturn(Future.successful(writeResult))

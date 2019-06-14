@@ -22,7 +22,7 @@ import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 abstract class Repo[A, ID](
   collectionName: String,
@@ -42,10 +42,9 @@ abstract class Repo[A, ID](
     override def writes(o: JsObject): JsObject = o
   }
 
-  import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 
-  private implicit class WriteResultChecker(future: Future[WriteResult])(implicit hc: HeaderCarrier) {
+  private implicit class WriteResultChecker(future: Future[WriteResult])(implicit hc: HeaderCarrier, ec:ExecutionContext) {
     def checkResult: Future[Unit] = future.map { writeResult =>
       if (hasAnyConcerns(writeResult)) throw new RuntimeException(writeResult.toString)
       else ()
