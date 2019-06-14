@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.ia.domain
 
-import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsError, _}
 import enumeratum._
 object EnumFormat {

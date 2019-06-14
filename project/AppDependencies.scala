@@ -1,6 +1,5 @@
 import play.core.PlayVersion
 import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
@@ -13,7 +12,6 @@ object AppDependencies {
   )
 
   def test(scope: String = "it,test") = Seq(
-    "uk.gov.hmrc" %% "hmrctest" % "3.3.0" % scope,
     "org.scalatest" %% "scalatest" % "3.0.7" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,
     "org.mockito" % "mockito-core" % "2.18.3" % scope,
