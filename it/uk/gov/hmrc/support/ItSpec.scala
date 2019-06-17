@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.support
 
+import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{AppendedClues, Matchers, WordSpec}
@@ -49,5 +50,7 @@ trait ItSpec extends WordSpec with ScalaFutures with IntegrationPatience with Ma
     override val hooks: Seq[HttpHook] = Nil
 
     override protected def configuration: Option[Config] = None
+
+    override protected def actorSystem: ActorSystem = app.injector.instanceOf[ActorSystem]
   }
 }
