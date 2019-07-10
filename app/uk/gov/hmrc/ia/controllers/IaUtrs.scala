@@ -24,8 +24,7 @@ import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IaUtrs @Inject()(service: GreenUtrService, cc: ControllerComponents) extends BackendController(cc) {
-
+class IaUtrs @Inject() (service: GreenUtrService, cc: ControllerComponents) extends BackendController(cc) {
 
   def switch(): Action[AnyContent] = Action.async { implicit request =>
     service.switchDB().map(_ => Ok)
@@ -35,7 +34,7 @@ class IaUtrs @Inject()(service: GreenUtrService, cc: ControllerComponents) exten
     service.dropAll().map(_ => Ok)
   }
 
-  def setActiveDB(db:String): Action[AnyContent] = Action.async { implicit request =>
+  def setActiveDB(db: String): Action[AnyContent] = Action.async { implicit request =>
 
     service.setDb(CurrentActiveDbs.withName(db)).map(_ => Ok)
   }
@@ -45,7 +44,6 @@ class IaUtrs @Inject()(service: GreenUtrService, cc: ControllerComponents) exten
       Ok(s"$records")
     })
   }
-
 
   def upload(): Action[List[GreenUtr]] = Action.async(parse.json[List[GreenUtr]]) { implicit request =>
     service.uploadBulkInActiveDb(request.body).map(noOfInserts => Ok(s"$noOfInserts"))
@@ -57,7 +55,7 @@ class IaUtrs @Inject()(service: GreenUtrService, cc: ControllerComponents) exten
 
   def find(utr: String) = Action.async { implicit request =>
     service.isGreenUtr(utr).map {
-      case true => Ok("")
+      case true  => Ok("")
       case false => NoContent
     }
   }

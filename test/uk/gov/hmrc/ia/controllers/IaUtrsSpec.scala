@@ -14,106 +14,70 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tests
+package uk.gov.hmrc.ia.controllers
 
 import org.scalatest.BeforeAndAfterEach
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.support.ItSpec
+import play.api.libs.json.Json
+import uk.gov.hmrc.ia.support.{ItSpec, TestConnector}
 
-class IaTests extends ItSpec with BeforeAndAfterEach {
-  private val iaBaseUrl = "http://localhost:8051"
-  private val uploadUrl: String = iaBaseUrl + "/ia/upload"
-  private val switchUrl: String = iaBaseUrl + "/ia/switch"
-  private val countUrl: String = iaBaseUrl + "/ia/count"
-  private val dropUrl: String = iaBaseUrl + "/ia/drop-all"
-  private val setDbUrl: String = iaBaseUrl + "/ia/set/"
-  private val findUrlBase: String = iaBaseUrl + "/ia/"
+class IaUtrsSpec extends ItSpec with BeforeAndAfterEach {
+
+  val connector = fakeApplication().injector.instanceOf[TestConnector]
 
   private val utrListJson = Json.arr(
     Json.obj("utr" -> "1234567890"),
     Json.obj("utr" -> "1234567891")
   )
 
-  private def uploadUtrs(request: JsValue) = {
-    httpClient.POST(uploadUrl, request).futureValue
-  }
-
-  private def uploadUtr(utr: String) = {
-    httpClient.POSTEmpty(uploadUrl + s"/$utr").futureValue
-  }
-
-  private def switch() = {
-    httpClient.POSTEmpty(switchUrl).futureValue
-  }
-
-  private def count() = {
-    httpClient.GET(countUrl).futureValue
-  }
-
-  private def drop() = {
-    httpClient.POSTEmpty(dropUrl).futureValue
-  }
-
-  private def setDb(dbName:String) = {
-    httpClient.POSTEmpty(setDbUrl + dbName).futureValue
-  }
-
-  private def find(utr: String) = {
-    httpClient.GET(findUrlBase + utr).futureValue
-  }
-//todo fix on someday make more rbust
-
   override def beforeEach(): Unit = {
-    drop()
-    setDb("DB1")
+    connector.drop().futureValue
+    connector.setDb("DB1").futureValue
   }
 
   "client" should {
 
     "be able to upload the utrs and get how many where updated back" in {
-      val resultPost = uploadUtrs(utrListJson)
+      val resultPost = connector.uploadUtrs(utrListJson).futureValue
       resultPost.status shouldBe 200
       resultPost.body shouldBe "2"
     }
 
-
     "be able to upload a single urt" in {
-      val resultPost = uploadUtr("999999999")
+      val resultPost = connector.uploadUtr("999999999").futureValue
       resultPost.status shouldBe 200
     }
 
     "be able to check if a utr is in the db" in {
-      uploadUtr("1234567890")
-      val findResult = find("1234567890")
+      connector.uploadUtr("1234567890").futureValue
+      val findResult = connector.find("1234567890").futureValue
       findResult.status shouldBe 200
     }
 
     "be able to check if a utr not in the db" in {
-      uploadUtrs(utrListJson)
-      val findResult = find("9999999999")
+      connector.uploadUtrs(utrListJson).futureValue
+      val findResult = connector.find("9999999999").futureValue
       findResult.status shouldBe 204
     }
 
     "be able to drop the db" in {
-      uploadUtrs(utrListJson)
-      drop()
-      val findResult = find("1234567890")
+      connector.uploadUtrs(utrListJson).futureValue
+      connector.drop().futureValue
+      val findResult = connector.find("1234567890").futureValue
       findResult.status shouldBe 204
     }
 
     "be able see to upload to the inactive db" in {
-      uploadUtrs(utrListJson)
+      connector.uploadUtrs(utrListJson).futureValue
 
-      val countResult = count()
+      val countResult = connector.count().futureValue
       countResult.status shouldBe 200
       countResult.body shouldBe "DbCount(SSTTP is currently pointed to DataBase DB1,count DataBase 1 is 0,count DataBase 2 is 2)"
     }
 
-    //todo write more and better it tests no time to do this sprint
     "be able to switch to another db and drop the other one " in {
-      uploadUtrs(utrListJson)
-      switch()
-      val countResult = count()
+      connector.uploadUtrs(utrListJson).futureValue
+      connector.switch().futureValue
+      val countResult = connector.count().futureValue
       countResult.status shouldBe 200
       countResult.body shouldBe "DbCount(SSTTP is currently pointed to DataBase DB2,count DataBase 1 is 0,count DataBase 2 is 2)"
     }

@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.ia.domain
 
-import play.api.libs.json.{JsError, _}
 import enumeratum._
+import play.api.libs.json.{JsError, _}
+
 object EnumFormat {
 
   def apply[T <: EnumEntry](e: Enum[T]): Format[T] = Format(

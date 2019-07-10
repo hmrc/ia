@@ -16,58 +16,54 @@
 
 package uk.gov.hmrc.ia.service
 
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.ia.domain.CurrentActiveDbs
 import uk.gov.hmrc.ia.repository.{ActiveRepo, ValidUtrRepoOne, ValidUtrRepoTwo}
-import uk.gov.hmrc.ia.support.Spec
-import uk.gov.hmrc.ia.support.TestData.validUtrs
-import org.mockito.Mockito.when
-import reactivemongo.api.commands.{MultiBulkWriteResult, Upserted, WriteError}
-import uk.gov.hmrc.ia.domain.{ActiveDb, GreenUtr}
-import uk.gov.hmrc.ia.domain.CurrentActiveDbs.{DB1, DB2}
+import uk.gov.hmrc.ia.support.TestData._
+import uk.gov.hmrc.ia.support.{ItSpec, TestConnector}
 
-import scala.concurrent.Future
+class GreenUtrServiceSpec extends ItSpec with MockitoSugar with BeforeAndAfterEach {
 
-class GreenUtrServiceSpec extends Spec  with MockitoSugar{
+  val connector = fakeApplication().injector.instanceOf[TestConnector]
+  val validUtrRepoOne = fakeApplication().injector.instanceOf[ValidUtrRepoOne]
+  val validUtrRepoTwo = fakeApplication().injector.instanceOf[ValidUtrRepoTwo]
+  val activeRepo = fakeApplication().injector.instanceOf[ActiveRepo]
+  val greenUtrService = new GreenUtrService(validUtrRepoOne, validUtrRepoTwo, activeRepo)
+
+  override def beforeEach(): Unit = {
+    connector.drop().futureValue
+  }
+
   class BulkInsertRejected extends Exception("No objects inserted. Error converting some or all to JSON")
-  val mockValidRepoOne = mock[ValidUtrRepoOne]
-  val mockValidRepoTwo = mock[ValidUtrRepoTwo]
-  val mockActiveRepo = mock[ActiveRepo]
-  val greenUtrService = new GreenUtrService(mockValidRepoOne,mockValidRepoTwo,mockActiveRepo)
 
-  val writeResult = MultiBulkWriteResult(true, 2, 0, Seq.empty[Upserted], Seq.empty[WriteError], None, None, None, 0)
-  when(mockActiveRepo.getActiveDb()).thenReturn(Future.successful(DB1))
   "The  GreenUtrService should insert Utrs into the inactive db" in {
-    when(mockValidRepoTwo.bulkInsert(validUtrs)).thenReturn(Future.successful(writeResult))
-    val result: Unit =  greenUtrService.uploadBulkInActiveDb(validUtrs).futureValue
-    result shouldBe ()
+    val result: Unit = greenUtrService.uploadBulkInActiveDb(validUtrs).futureValue
+    result shouldBe (())
   }
   "The  GreenUtrService should insert Utrs into the active db" in {
-    when(mockValidRepoOne.bulkInsert(validUtrs)).thenReturn(Future.successful(writeResult))
-    val result: Unit =  greenUtrService.uploadActiveDb(validUtrs).futureValue
-    result shouldBe ()
-  }
-
-
-  "Return an exception if it fails to insert " in {
-    when(mockValidRepoTwo.bulkInsert(validUtrs)).thenReturn(Future.failed[MultiBulkWriteResult](new BulkInsertRejected()))
-    intercept[RuntimeException] {
-      greenUtrService.uploadBulkInActiveDb(validUtrs).futureValue
-    }.getMessage contains "No objects inserted. Error converting some or all to JSON" shouldBe true
+    val result: Unit = greenUtrService.uploadActiveDb(validUtrs).futureValue
+    result shouldBe (())
   }
 
   "return true if the item is in the db in" in {
-    when(mockValidRepoOne.find("utr" -> "1234567890")).thenReturn(Future.successful(List(GreenUtr("1234567890"))))
-    val result =  greenUtrService.isGreenUtr("1234567890").futureValue
+    greenUtrService.uploadActiveDb(validUtrs).futureValue
+    val result = greenUtrService.isGreenUtr("123456789").futureValue
     result shouldBe true
   }
+
   "return false if the item is in the db in" in {
-    when(mockValidRepoOne.find("utr" -> "1234567890")).thenReturn(Future.successful(List()))
-    val result =  greenUtrService.isGreenUtr("1234567890").futureValue
+    val result = greenUtrService.isGreenUtr("1234567890").futureValue
     result shouldBe false
   }
+
   "return switchDB should switch the db and drop the other one " in {
-    greenUtrService.uploadBulkInActiveDb(validUtrs)
-    greenUtrService.switchDB
-    when(mockActiveRepo.setDb(ActiveDb(1,DB2))).thenReturn(Future.successful(()))
+    greenUtrService.setDb(CurrentActiveDbs.DB1).futureValue
+    greenUtrService.uploadBulkInActiveDb(validUtrs).futureValue
+    val result = greenUtrService.isGreenUtr("123456789").futureValue
+    result shouldBe false
+    greenUtrService.switchDB.futureValue
+    val result2 = greenUtrService.isGreenUtr("123456789").futureValue
+    result2 shouldBe true
   }
 }

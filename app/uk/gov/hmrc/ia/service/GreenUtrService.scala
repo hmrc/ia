@@ -25,13 +25,23 @@ import uk.gov.hmrc.ia.repository.{ActiveRepo, Repo, ValidUtrRepoOne, ValidUtrRep
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoTwo, currantActiveDb: ActiveRepo) {
+class GreenUtrService @Inject() (repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoTwo, currantActiveDb: ActiveRepo) {
   def uploadBulkInActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext): Future[Int] = {
     getInActiveDb().flatMap(_.bulkInsert(greenListedUtr)).map(_.totalN)
   }
 
+  private def getInActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map {
+    case DB1 => repoTwo
+    case DB2 => repoOne
+  }
+
   def uploadActiveDb(greenListedUtr: List[GreenUtr])(implicit ec: ExecutionContext): Future[MultiBulkWriteResult] = {
     getActiveDb().flatMap(_.bulkInsert(greenListedUtr))
+  }
+
+  private def getActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map {
+    case DB1 => repoOne
+    case DB2 => repoTwo
   }
 
   def count()(implicit ec: ExecutionContext): Future[DbCount] = {
@@ -54,26 +64,15 @@ class GreenUtrService @Inject()(repoOne: ValidUtrRepoOne, repoTwo: ValidUtrRepoT
     }.map(_ => ())
   }
 
-  def dropAll()(implicit ec: ExecutionContext): Future[Unit] = {
-    for {
-      _ <- repoOne.drop
-      _ <- repoTwo.drop
-     } yield ()
-  }
-
-
   def setDb(activeDb: CurrentActiveDb)(implicit ec: ExecutionContext): Future[Unit] = {
     currantActiveDb.setDb(ActiveDb(1, activeDb))
   }
 
-  private def getActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map {
-    case DB1 => repoOne
-    case DB2 => repoTwo
-  }
-
-  private def getInActiveDb()(implicit ec: ExecutionContext): Future[Repo[GreenUtr, String]] = currantActiveDb.getActiveDb().map {
-    case DB1 => repoTwo
-    case DB2 => repoOne
+  def dropAll()(implicit ec: ExecutionContext): Future[Unit] = {
+    for {
+      _ <- repoOne.drop
+      _ <- repoTwo.drop
+    } yield ()
   }
 
 }
