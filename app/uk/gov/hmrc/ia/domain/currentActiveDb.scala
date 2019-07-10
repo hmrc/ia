@@ -17,25 +17,24 @@
 package uk.gov.hmrc.ia.domain
 
 import enumeratum._
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, OFormat}
 
 sealed abstract class CurrentActiveDb extends EnumEntry
 
 object CurrentActiveDbs extends Enum[CurrentActiveDb] {
 
+  override def values = findValues
+
   case object DB1 extends CurrentActiveDb
 
   case object DB2 extends CurrentActiveDb
 
-  override def values = findValues
-
 }
-
 
 case class ActiveDb(id: Int = 1, activeDb: CurrentActiveDb)
 
 object ActiveDb {
 
   implicit val dbFormat: Format[CurrentActiveDb] = EnumFormat(CurrentActiveDbs)
-  implicit val activeDbFormat = Json.format[ActiveDb]
+  implicit val activeDbFormat: OFormat[ActiveDb] = Json.format[ActiveDb]
 }

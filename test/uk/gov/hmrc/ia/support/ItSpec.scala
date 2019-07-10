@@ -14,43 +14,31 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.support
+package uk.gov.hmrc.ia.support
 
-import akka.actor.ActorSystem
-import com.typesafe.config.Config
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{AppendedClues, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.concurrent.ExecutionContext
 
 trait ItSpec extends WordSpec with ScalaFutures with IntegrationPatience with Matchers with AppendedClues
   with GuiceOneServerPerSuite {
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure(
-      ).build()
-
   override lazy val port: Int = 8051
-  implicit lazy val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
+  def httpClient = fakeApplication().injector.instanceOf[HttpClient]
+  implicit lazy val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val httpClient: HttpClient = new HttpClient with WSHttp {
-    override def wsClient: WSClient = app.injector.instanceOf(classOf[WSClient])
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure(Map[String, Any](
+        "mongodb.uri " -> "mongodb://localhost:27017/ia-it"
+      )).build()
 
-    override val hooks: Seq[HttpHook] = Nil
-
-    override protected def configuration: Option[Config] = None
-
-    override protected def actorSystem: ActorSystem = app.injector.instanceOf[ActorSystem]
-  }
 }

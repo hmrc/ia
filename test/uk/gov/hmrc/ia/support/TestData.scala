@@ -15,8 +15,9 @@
  */
 
 package uk.gov.hmrc.ia.support
-import uk.gov.hmrc.ia.domain.GreenUtr
-object TestData {
 
-  val validUtrs = List(GreenUtr("123456789"),GreenUtr("1234567891"))
+import uk.gov.hmrc.ia.domain.GreenUtr
+
+object TestData {
+  val validUtrs = List(GreenUtr("123456789"), GreenUtr("1234567891"))
 }

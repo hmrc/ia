@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.ia.domain
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 case class GreenUtr(utr: String)
 
-object GreenUtr{
-  implicit val utrFormat = Json.format[GreenUtr]
+object GreenUtr {
+  implicit val utrFormat: OFormat[GreenUtr] = Json.format[GreenUtr]
 }

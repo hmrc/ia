@@ -18,7 +18,6 @@ package uk.gov.hmrc.ia.support
 
 import org.scalatest._
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
 
 import scala.concurrent.ExecutionContext
 
@@ -37,7 +36,6 @@ trait Spec
   with StreamlinedXml
   with Inside
   with Eventually
-  with MockitoSugar
   with IntegrationPatience {
 
   implicit lazy val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
